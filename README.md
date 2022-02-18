@@ -16,6 +16,8 @@ An installable e-commerce app built using the MERN stack, Redux.js, Bootstrap 5 
 <br/>
 The app also implements an email verification system for users registering using an email and password. Stripe and Paypal payment gateways are implemented to provide payment options, and the app also includes an admin panel to keep track of all products, orders and users. This is also a PWA
 
+## Solana Pay and wallet-adapter included included 
+
 ## Getting Started
 
 -   Fork this repo and run the `git clone <forked repo>` command from your terminal/bash.
