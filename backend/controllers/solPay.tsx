@@ -12,7 +12,6 @@ import {
   validateTransactionSignature,
 } from "@solana/pay";
 
-import { simulateCheckout } from "./simulateCheckout";
 
 export const SolPayments: FC = () => {
   const { wallet } = useWallet();
@@ -27,6 +26,7 @@ export const SolPayments: FC = () => {
     const memo = "";
     const amount = new BigNumber(1);
     const reference = new Keypair().publicKey;
+    let paymentStatus: string;
     try {
         console.log("3. 💰 Create a payment request link \n");
         const url = encodeURL({
@@ -41,11 +41,59 @@ export const SolPayments: FC = () => {
         console.log(url);
         // encode URL in QR code
         // const qrCode = createQR(url); // to make qr code for encoded payment link
+
+        paymentStatus = 'pending';
+        console.log(`payment status: ${paymentStatus}`);
+        let signatureInfo;
+        const { signature } = await new Promise((resolve, reject) => {
+          const interval = setInterval(async () => {
+              console.count('Checking for transaction...');
+              try {
+                  signatureInfo = await findTransactionSignature(connection, reference, undefined, 'confirmed');
+                  console.log('\n 🖌  Signature found: ', signatureInfo.signature);
+                  clearInterval(interval);
+                  resolve(signatureInfo);
+              } catch (error: any) {
+                  if (!(error instanceof FindTransactionSignatureError)) {
+                      console.error(error);
+                      clearInterval(interval);
+                      reject(error);
+                  }
+              }
+          }, 250);
+      });
+
+      paymentStatus = "confirmed";
+      console.log(`payment status: ${paymentStatus}`);
+      try {
+        const amountInLamports = amount.times(LAMPORTS_PER_SOL).integerValue(BigNumber.ROUND_FLOOR);
+  
+        await validateTransactionSignature(
+            connection,
+            signature,
+            MERCHANT_WALLET,
+            amountInLamports,
+            undefined,
+            reference
+        );
+  
+        // Update payment status
+        paymentStatus = 'validated';
+        console.log('✅ Payment validated');
+        console.log('📦 Ship order to customer');
+    } catch (error) {
+        console.error('❌ Payment failed', error);
+    }
+  
     }catch(err) {
      console.log(err)   
     }
 
+
+
   }, []);
+
+  
 
   return (
     <div>
